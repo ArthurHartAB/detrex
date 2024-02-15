@@ -11,6 +11,8 @@ from detectron2.data import (
 from detectron2.evaluation import COCOEvaluator
 
 from detrex.data import DetrDatasetMapper
+from ...crop_merge.dataset_mapper import DoubleCropDetrDatasetMapper
+
 
 from detectron2.data.datasets import register_coco_instances
 register_coco_instances("ab_4_cls_train", {"thing_classes": ["2w", "4w", "ped", "rider"]
@@ -58,16 +60,20 @@ dataloader.train = L(build_detection_train_loader)(
 dataloader.test = L(build_detection_test_loader)(
     dataset=L(get_detection_dataset_dicts)(
         names="ab_4_cls_test", filter_empty=False),
-    mapper=L(DetrDatasetMapper)(
+    mapper=L(DoubleCropDetrDatasetMapper)(
         augmentation=[
             L(T.ResizeShortestEdge)(
                 short_edge_length=eval_scale,
                 max_size=max_size,
             ),
         ],
-        augmentation_with_crop=None,
+        augmentation_with_crop=[
+            L(T.RandomFlip)(),
+            T.CropTransform(0, int(960 - central_crop_height/2),
+                            3840, central_crop_height),
+        ],
         is_train=False,
-        mask_on=False,
+        # mask_on=False,
         img_format="RGB",
     ),
     num_workers=4,

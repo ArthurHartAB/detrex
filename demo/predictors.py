@@ -17,7 +17,7 @@ def filter_predictions_with_confidence(predictions, confidence_threshold=0.5):
     if "instances" in predictions:
         preds = predictions["instances"]
         keep_idxs = preds.scores > confidence_threshold
-        predictions = copy(predictions) # don't modify the original
+        predictions = copy(predictions)  # don't modify the original
         predictions["instances"] = preds[keep_idxs]
     return predictions
 
@@ -78,10 +78,12 @@ class VisualizationDemo(object):
         """
         vis_output = None
         predictions = self.predictor(image)
-        predictions = filter_predictions_with_confidence(predictions, threshold)
+        predictions = filter_predictions_with_confidence(
+            predictions, threshold)
         # Convert image from OpenCV BGR format to Matplotlib RGB format.
         image = image[:, :, ::-1]
-        visualizer = Visualizer(image, self.metadata, instance_mode=self.instance_mode)
+        visualizer = Visualizer(image, self.metadata,
+                                instance_mode=self.instance_mode)
         if "panoptic_seg" in predictions:
             panoptic_seg, segments_info = predictions["panoptic_seg"]
             vis_output = visualizer.draw_panoptic_seg_predictions(
@@ -94,7 +96,8 @@ class VisualizationDemo(object):
                 )
             if "instances" in predictions:
                 instances = predictions["instances"].to(self.cpu_device)
-                vis_output = visualizer.draw_instance_predictions(predictions=instances)
+                vis_output = visualizer.draw_instance_predictions(
+                    predictions=instances)
 
         return predictions, vis_output
 
@@ -120,7 +123,8 @@ class VisualizationDemo(object):
         video_visualizer = VideoVisualizer(self.metadata, self.instance_mode)
 
         def process_predictions(frame, predictions, threshold):
-            predictions = filter_predictions_with_confidence(predictions, threshold)
+            predictions = filter_predictions_with_confidence(
+                predictions, threshold)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             if "panoptic_seg" in predictions:
                 panoptic_seg, segments_info = predictions["panoptic_seg"]
@@ -129,10 +133,12 @@ class VisualizationDemo(object):
                 )
             elif "instances" in predictions:
                 predictions = predictions["instances"].to(self.cpu_device)
-                vis_frame = video_visualizer.draw_instance_predictions(frame, predictions)
+                vis_frame = video_visualizer.draw_instance_predictions(
+                    frame, predictions)
             elif "sem_seg" in predictions:
                 vis_frame = video_visualizer.draw_sem_seg(
-                    frame, predictions["sem_seg"].argmax(dim=0).to(self.cpu_device)
+                    frame, predictions["sem_seg"].argmax(
+                        dim=0).to(self.cpu_device)
                 )
 
             # Converts Matplotlib RGB format to OpenCV BGR format
@@ -179,7 +185,8 @@ class DefaultPredictor:
         # checkpointer = DetectionCheckpointer(self.model)
         # checkpointer.load(init_checkpoint)
 
-        self.aug = T.ResizeShortestEdge([min_size_test, min_size_test], max_size_test)
+        self.aug = T.ResizeShortestEdge(
+            [min_size_test, min_size_test], max_size_test)
 
         self.input_format = img_format
         assert self.input_format in ["RGB", "BGR"], self.input_format
@@ -200,7 +207,8 @@ class DefaultPredictor:
                 # whether the model expects BGR inputs or RGB
                 original_image = original_image[:, :, ::-1]
             height, width = original_image.shape[:2]
-            image = self.aug.get_transform(original_image).apply_image(original_image)
+            image = self.aug.get_transform(
+                original_image).apply_image(original_image)
             image = torch.as_tensor(image.astype("float32").transpose(2, 0, 1))
 
             inputs = {"image": image, "height": height, "width": width}
@@ -268,9 +276,11 @@ class AsyncPredictor:
         for gpuid in range(max(num_gpus, 1)):
             cfg = cfg.clone()
             cfg.defrost()
-            cfg.MODEL.DEVICE = "cuda:{}".format(gpuid) if num_gpus > 0 else "cpu"
+            cfg.MODEL.DEVICE = "cuda:{}".format(
+                gpuid) if num_gpus > 0 else "cpu"
             self.procs.append(
-                AsyncPredictor._PredictWorker(cfg, self.task_queue, self.result_queue)
+                AsyncPredictor._PredictWorker(
+                    cfg, self.task_queue, self.result_queue)
             )
 
         self.put_idx = 0

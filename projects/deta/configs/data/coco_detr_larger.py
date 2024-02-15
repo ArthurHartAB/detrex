@@ -11,7 +11,6 @@ from detectron2.evaluation import COCOEvaluator
 
 from detrex.data import DetrDatasetMapper
 
-
 # hyper-param for large resolution training and testing
 train_scales = [480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800]
 train_scales = [int(scale * 1.5) for scale in train_scales]

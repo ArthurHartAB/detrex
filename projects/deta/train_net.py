@@ -33,7 +33,8 @@ from detectron2.engine.defaults import create_ddp_model
 from detectron2.evaluation import inference_on_dataset, print_csv_format
 from detectron2.utils import comm
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+sys.path.append(os.path.abspath(os.path.join(
+    os.path.dirname(__file__), os.path.pardir)))
 
 logger = logging.getLogger("detrex")
 
@@ -65,7 +66,8 @@ class Trainer(SimpleTrainer):
 
         unsupported = "AMPTrainer does not support single-process multi-device training!"
         if isinstance(model, DistributedDataParallel):
-            assert not (model.device_ids and len(model.device_ids) > 1), unsupported
+            assert not (model.device_ids and len(
+                model.device_ids) > 1), unsupported
         assert not isinstance(model, DataParallel), unsupported
 
         if amp:
@@ -86,7 +88,8 @@ class Trainer(SimpleTrainer):
         Implement the standard training logic described above.
         """
         assert self.model.training, "[Trainer] model was changed to eval mode!"
-        assert torch.cuda.is_available(), "[Trainer] CUDA is required for AMP training!"
+        assert torch.cuda.is_available(
+        ), "[Trainer] CUDA is required for AMP training!"
         from torch.cuda.amp import autocast
 
         start = time.perf_counter()
@@ -129,7 +132,8 @@ class Trainer(SimpleTrainer):
         self._write_metrics(loss_dict, data_time)
 
     def clip_grads(self, params):
-        params = list(filter(lambda p: p.requires_grad and p.grad is not None, params))
+        params = list(
+            filter(lambda p: p.requires_grad and p.grad is not None, params))
         if len(params) > 0:
             return torch.nn.utils.clip_grad_norm_(
                 parameters=params,
@@ -140,7 +144,8 @@ class Trainer(SimpleTrainer):
 def do_test(cfg, model):
     if "evaluator" in cfg.dataloader:
         ret = inference_on_dataset(
-            model, instantiate(cfg.dataloader.test), instantiate(cfg.dataloader.evaluator)
+            model, instantiate(cfg.dataloader.test), instantiate(
+                cfg.dataloader.evaluator)
         )
         print_csv_format(ret)
         return ret
