@@ -18,6 +18,18 @@ import sys
 import time
 import torch
 from torch.nn.parallel import DataParallel, DistributedDataParallel
+from detrex.utils import WandbWriter
+
+from detrex.modeling import ema
+
+from detectron2.utils.file_io import PathManager
+from detectron2.utils.events import (
+    CommonMetricPrinter,
+    JSONWriter,
+    TensorboardXWriter
+)
+
+
 
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import LazyConfig, instantiate
@@ -32,6 +44,9 @@ from detectron2.engine import (
 from detectron2.engine.defaults import create_ddp_model
 from detectron2.evaluation import inference_on_dataset, print_csv_format
 from detectron2.utils import comm
+
+
+from projects.deta.crop_merge.model_wrapper import TwoCropsWrapper
 
 sys.path.append(os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir)))
@@ -144,7 +159,7 @@ class Trainer(SimpleTrainer):
 def do_test(cfg, model):
     if "evaluator" in cfg.dataloader:
         ret = inference_on_dataset(
-            model, instantiate(cfg.dataloader.test), instantiate(
+            TwoCropsWrapper(model), instantiate(cfg.dataloader.test), instantiate(
                 cfg.dataloader.evaluator)
         )
         print_csv_format(ret)
@@ -225,7 +240,38 @@ def do_train(args, cfg):
         trainer=trainer,
     )
 
+    if comm.is_main_process():
+        # writers = default_writers(cfg.train.output_dir, cfg.train.max_iter)
+        output_dir = cfg.train.output_dir
+        PathManager.mkdirs(output_dir)
+        writers = [
+            CommonMetricPrinter(cfg.train.max_iter),
+            JSONWriter(os.path.join(output_dir, "metrics.json")),
+            TensorboardXWriter(output_dir),
+        ]
+        if cfg.train.wandb.enabled:
+            PathManager.mkdirs(cfg.train.wandb.params.dir)
+            writers.append(WandbWriter(cfg))
+
     trainer.register_hooks(
+        [
+            hooks.IterationTimer(),
+            ema.EMAHook(cfg, model) if cfg.train.model_ema.enabled else None,
+            hooks.LRScheduler(scheduler=instantiate(cfg.lr_multiplier)),
+            hooks.PeriodicCheckpointer(checkpointer, **cfg.train.checkpointer)
+            if comm.is_main_process()
+            else None,
+            hooks.EvalHook(cfg.train.eval_period, lambda: do_test(cfg, model)),
+            hooks.PeriodicWriter(
+                writers,
+                period=cfg.train.log_period,
+            )
+            if comm.is_main_process()
+            else None,
+        ]
+    )
+
+    '''trainer.register_hooks(
         [
             hooks.IterationTimer(),
             hooks.LRScheduler(scheduler=instantiate(cfg.lr_multiplier)),
@@ -240,7 +286,7 @@ def do_train(args, cfg):
             if comm.is_main_process()
             else None,
         ]
-    )
+    )'''
 
     checkpointer.resume_or_load(cfg.train.init_checkpoint, resume=args.resume)
     if args.resume and checkpointer.has_checkpoint():

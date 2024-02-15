@@ -40,7 +40,7 @@ dataloader.train = L(build_detection_train_loader)(
             L(T.RandomFlip)(),
             L(T.ResizeShortestEdge)(
                 short_edge_length=train_scales,
-                max_size=2000,
+                max_size=max_size,
                 sample_style="choice",
             ),
         ],

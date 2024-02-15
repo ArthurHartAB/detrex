@@ -43,7 +43,7 @@ class TwoCropsWrapper(nn.Module):
 
         crop_boxes = predictions_single_crop['instances'].pred_boxes.tensor
 
-        print("crop_boxes : ", crop_boxes)
+        #print("crop_boxes : ", crop_boxes)
 
         crop_boxes[:, 1] = crop_boxes[:, 1] * \
             self.crop_height/IMAGE_HEIGHT + IMAGE_HEIGHT/2 - self.crop_height/2

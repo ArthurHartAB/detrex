@@ -86,13 +86,13 @@ model = L(DeformableDETR)(
         assign_first_stage=True,
     ),
     embed_dim=256,
-    num_classes=80,  # 4
+    num_classes=4,  # 80
     num_queries=900,
     aux_loss=True,
     with_box_refine=True,
     as_two_stage=True,
     criterion=L(DETACriterion)(
-        num_classes=80,  # 4
+        num_classes=4,  # 80
         matcher=L(HungarianMatcher)(
             cost_class=2.0,
             cost_bbox=5.0,
