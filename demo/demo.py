@@ -74,7 +74,7 @@ def get_parser():
     parser.add_argument(
         "--metadata_dataset",
         type=str,
-        default="coco_2017_val",
+        default="ab_4_cls_train",  # "coco_2017_val",
         help="The metadata infomation to be used. Default to COCO val metadata.",
     )
     parser.add_argument(

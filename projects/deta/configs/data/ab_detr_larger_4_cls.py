@@ -1,3 +1,4 @@
+from detectron2.data import MetadataCatalog
 from omegaconf import OmegaConf
 
 import detectron2.data.transforms as T
@@ -12,11 +13,10 @@ from detectron2.evaluation import COCOEvaluator
 from detrex.data import DetrDatasetMapper
 
 from detectron2.data.datasets import register_coco_instances
-register_coco_instances("ab_4_cls_train", {
-}, "/media/DATADISK/coco_datasets/ab_train/coco_labels.json", "/")
-register_coco_instances("ab_4_cls_test",  {
-}, "/media/DATADISK/coco_datasets/amba_taiwan_train_0208/coco_labels.json", "/")
-
+register_coco_instances("ab_4_cls_train", {"thing_classes": ["2w", "4w", "ped", "rider"]
+                                           }, "/media/DATADISK/coco_datasets/ab_train/coco_labels.json", "/")
+register_coco_instances("ab_4_cls_test",  {"thing_classes": ["2w", "4w", "ped", "rider"]
+                                           }, "/media/DATADISK/coco_datasets/amba_taiwan_train_0208/coco_labels.json", "/")
 
 # hyper-param for large resolution training and testing
 train_scales = [480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800]
@@ -32,7 +32,7 @@ central_crop_height = 300
 dataloader = OmegaConf.create()
 
 dataloader.train = L(build_detection_train_loader)(
-    dataset=L(get_detection_dataset_dicts)(names="ab_4_cls_test"),
+    dataset=L(get_detection_dataset_dicts)(names="ab_4_cls_train"),
     mapper=L(DetrDatasetMapper)(
         augmentation=[
             L(T.RandomFlip)(),
@@ -51,7 +51,7 @@ dataloader.train = L(build_detection_train_loader)(
         mask_on=False,
         img_format="RGB",
     ),
-    total_batch_size=1,  # 16
+    total_batch_size=4,  # 16
     num_workers=4,
 )
 
