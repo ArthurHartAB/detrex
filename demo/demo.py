@@ -20,6 +20,10 @@ from detectron2.utils.logger import setup_logger
 
 from detrex.utils.profiler import Timer, timing_val
 
+from projects.deta.crop_merge.predictor import DoubleCropVisualizationDemo
+from projects.deta.crop_merge.model_wrapper import TwoCropsWrapper
+
+
 # constants
 WINDOW_NAME = "COCO detections"
 
@@ -56,13 +60,13 @@ def get_parser():
     parser.add_argument(
         "--min_size_test",
         type=int,
-        default=1920/2,  # 800,
+        default=1920 / 2,  # 800,
         help="Size of the smallest side of the image during testing. Set to zero to disable resize in testing.",
     )
     parser.add_argument(
         "--max_size_test",
         type=float,
-        default=3840/2,  # 1333,
+        default=3840 / 2,  # 1333,
         help="Maximum size of the side of the image during testing.",
     )
     parser.add_argument(
@@ -125,10 +129,17 @@ if __name__ == "__main__":
 
     model.eval()
 
-    demo = VisualizationDemo(
+    '''demo = VisualizationDemo(
         model=model,
         min_size_test=args.min_size_test,
         max_size_test=args.max_size_test,
+        img_format=args.img_format,
+        metadata_dataset=args.metadata_dataset,
+    )'''
+
+    demo = DoubleCropVisualizationDemo(
+        model=TwoCropsWrapper(model),
+        max_image_size=2000,
         img_format=args.img_format,
         metadata_dataset=args.metadata_dataset,
     )

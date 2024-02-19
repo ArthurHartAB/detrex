@@ -33,7 +33,7 @@ train.wandb = dict(
     params=dict(
         dir="/mnt/s3/ab-b2b-dev/arthur/deta/wandb_output",
         project="deta",
-        name="deta_experiment",
+        name="deta_experiment_resume",
         # config={
         #    "learning_rate": optimizer.lr,
         # }
