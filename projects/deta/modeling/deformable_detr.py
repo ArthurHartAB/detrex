@@ -357,7 +357,7 @@ class DeformableDETR(nn.Module):
             zip(all_scores, all_labels, boxes, image_sizes)
         ):
 
-            pre_topk = scores_per_image.topk(10000).indices  # 10000
+            pre_topk = scores_per_image.topk(1000).indices  # 10000
 
             box = box_pred_per_image[pre_topk]
             score = scores_per_image[pre_topk]
