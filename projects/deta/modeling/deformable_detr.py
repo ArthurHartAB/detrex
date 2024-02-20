@@ -119,8 +119,8 @@ class DeformableDETR(nn.Module):
         # Decoder layers share the same heads without box refinement, while use the different
         # heads when box refinement is used.
         num_pred = (
-            (transformer.decoder.num_layers +
-             1) if as_two_stage else transformer.decoder.num_layers
+            (transformer.decoder.num_layers
+             + 1) if as_two_stage else transformer.decoder.num_layers
         )
         if with_box_refine:
             self.class_embed = nn.ModuleList(
@@ -357,9 +357,8 @@ class DeformableDETR(nn.Module):
             zip(all_scores, all_labels, boxes, image_sizes)
         ):
 
-            pre_topk = scores_per_image.topk(
-                min(10000, len(box_pred_per_image))).indices  # 10000
-            
+            pre_topk = scores_per_image.topk(10000).indices  # 10000
+
             box = box_pred_per_image[pre_topk]
             score = scores_per_image[pre_topk]
             label = labels_per_image[pre_topk]
